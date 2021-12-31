@@ -1,0 +1,45 @@
+version: "3"
+
+services:
+  app:
+    container_name: node-app
+    image: farukkon/node-app
+    build:
+      context: ./node
+    networks:
+      - docker-node
+    volumes:
+      - ./node:/home/app
+    tty: true
+    depends_on:
+      - db
+
+  db:
+    image: mysql:5.7
+    command: --innodb-use-native-aio=0
+    container_name: sql_db
+    restart: always
+    tty: true
+    volumes:
+      - ./mysql:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=node_db
+      - MYSQL_ROOT_PASSWORD=root
+    networks:
+      - docker-node
+  
+  nginx:
+    container_name: nginx
+    image: farukkon/nginx
+    build:
+      context: ./nginx
+    ports:
+      - 8080:8080
+    depends_on:
+      - app
+    networks:
+      - docker-node
+
+networks:
+  docker-node:
+    driver: bridge
